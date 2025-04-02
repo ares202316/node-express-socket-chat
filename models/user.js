@@ -9,6 +9,12 @@ const UserSchema = new mongoose.Schema({
     nombre: { type: String },
     apellido: { type: String },
     password: { type: String },
+    resetPasswordToken: {
+        type: String,  
+    },
+    resetPasswordExpires: {
+        type: Date,  
+    },
     avatar: { type: String }
 });
 

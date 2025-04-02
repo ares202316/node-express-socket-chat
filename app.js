@@ -1,10 +1,11 @@
 import express from "express";
 import http from "http";
+import "dotenv/config";
 import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import { initSocketServer} from "./utils/index.js";
-import {authRoutes, userRoutes, ChaRoutes} from "./routes/index.js";
+import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes} from "./routes/index.js";
 
 
 const app = express();
@@ -31,6 +32,9 @@ app.use(morgan("dev"));
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", ChaRoutes);
+app.use("/api", chatMessageRoutes);
+
+
 
 export {server};
 

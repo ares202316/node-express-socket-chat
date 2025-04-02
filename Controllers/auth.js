@@ -2,7 +2,9 @@ import bcrypt from "bcryptjs";
 import { User } from "../models/index.js";
 import { jwt } from "../utils/index.js";
 import jsonwebtoken from "jsonwebtoken";
-
+import nodemailer from "nodemailer";
+import crypto from 'crypto';
+import moment from 'moment';
 
 async function register(req, res) {
     try {
@@ -97,8 +99,106 @@ async function refreshAccessToken(req, res) {
 }
 
 
+async function sendRecoveryEmail(email, token) {
+    try {
+        console.log("Enviando token:", token); // Verifica que el token tiene valor antes de enviarlo
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        // 🔥 Corrección: Asegurar interpolación del token en el email
+        const mailOptions = {
+            from: `"Soporte ChatApp" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Recuperación de contraseña",
+            html: `
+                <h2>Solicitud de restablecimiento de contraseña</h2>
+                <p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
+                <p>Para proceder, haz clic en el siguiente enlace:</p>
+                <p><strong>Token:</strong> ${token}</p> <!--  MOSTRAR EL TOKEN EN EL EMAIL -->
+                <a href="http://localhost:5000/reset-password?token=${token}">Restablecer contraseña</a>
+                <p>Si no hiciste esta solicitud, ignora este mensaje.</p>
+                <p>Este enlace expira en 15 minutos.</p>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log("Correo de recuperación enviado a", email);
+    } catch (error) {
+        console.error("Error enviando el correo:", error);
+    }
+}
+
+async function forgotPassword(req, res) {
+    try {
+        const { email } = req.body;
+        const emailLowerCase = email.toLowerCase();
+
+        const user = await User.findOne({ email: emailLowerCase });
+        if (!user) {
+            return res.status(400).send({ msg: "Usuario no encontrado" });
+        }
+
+        // Generar token seguro
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const expireTime = moment().add(15, "minutes").toDate();
+
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = expireTime;
+        await user.save();
+
+        console.log("Token generado:", resetToken); // Verifica que el token se genera correctamente
+
+        await sendRecoveryEmail(emailLowerCase, resetToken);
+
+        res.status(200).send({ msg: "Correo de recuperación enviado" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ msg: "Error del servidor", error });
+    }
+}
+
+async function resetPassword(req, res) {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Verifica si el token es válido y si no ha expirado
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: moment().toDate() }  // Verifica si el token no ha expirado
+        });
+
+        if (!user) {
+            return res.status(400).send({ msg: "Token inválido o expirado" });
+        }
+
+        // Encriptar la nueva contraseña
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Actualizar la contraseña y limpiar los campos del token
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;  // Limpiar el token de recuperación
+        user.resetPasswordExpires = undefined;  // Limpiar la expiración
+        await user.save();
+
+        // Enviar una respuesta de éxito
+        res.status(200).send({ msg: "Contraseña restablecida exitosamente" });
+
+    } catch (error) {
+        res.status(500).send({ msg: "Error al restablecer la contraseña", error });
+    }
+}
+
 export const AuthController = {
     register,
     login,
     refreshAccessToken,
+    forgotPassword,
+    resetPassword,
 };

@@ -9,4 +9,6 @@ api.get("/chat", [mdAuth.asureAuth], ChatController.getAll);
 api.delete("/chat/:id", [mdAuth.asureAuth], ChatController.deleteChat);
 api.get("/chat/:id", [mdAuth.asureAuth], ChatController.getChat);
 
+
+
 export const ChaRoutes = api;

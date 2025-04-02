@@ -1,4 +1,4 @@
-import { Chat } from "../models/index.js";
+import { Chat, ChatMessage} from "../models/index.js";
 
 async function create(req, res) {
     try {
@@ -42,10 +42,22 @@ async function getAll(req, res) {
         })
         .populate("participant_one")
         .populate("participant_two")
-        .exec(); // Se usa exec() correctamente
+        .exec(); 
 
-        res.status(200).send(chats);
+        const arrayChats = [];
+        for await (const chat of chats) {
+            const response = await ChatMessage.findOne({ chat: chat._id })
+                .sort({ createdAt: -1 });
+
+            arrayChats.push({
+                ...chat.toObject(), // <- Convertimos el documento Mongoose en objeto JS
+                last_message_date: response?.createdAt || null,
+            });
+        }
+
+        res.status(200).send(arrayChats); // Enviamos el array modificado
     } catch (error) {
+        console.error("Error en getAll:", error);
         res.status(400).send({ msg: "Error al obtener los chats", error });
     }
 }
