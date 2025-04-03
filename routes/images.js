@@ -13,7 +13,7 @@ const api = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-api.get("/avatars/:filename", (req, res) => {
+api.get("/avatar/:filename", (req, res) => {
     const { filename } = req.params;
     const filePath = path.join(__dirname, "..", "uploads", "avatar", filename);
 
