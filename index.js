@@ -3,7 +3,7 @@ import { server } from "./app.js";
 import { PORT, IP_SERVER, DB_USER, DB_PASSWORD, DB_HOST } from "./constants.js";
 import { Server } from "socket.io";
 import moment from "moment-timezone";
-import { ChatMessage } from "./models/chatMessage.model.js"; // Ajusta a tu ruta real
+import { ChatMessage } from "./models/index.js"; // Ajusta a tu ruta real
 
 const mongoDbUrl = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}`;
 
