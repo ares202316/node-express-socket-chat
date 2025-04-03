@@ -111,7 +111,10 @@ async function getLastMessage(req, res) {
     } catch (error) {
         res.status(500).send({ msg: "Error del servidor" });
     }
-}
+}  
+
+
+
 
 export const ChatMessageController = {
     sendMessage,
@@ -119,5 +122,6 @@ export const ChatMessageController = {
     getAll,
     getTotalMessage,
     getLastMessage,
+  
     
 };

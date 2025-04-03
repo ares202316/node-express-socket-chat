@@ -97,10 +97,63 @@ async function getChat(req, res) {
     }
 }
 
+async function getChatsFiltered(req, res) {
+    try {
+        const user_id  = req.params.id; // Obtenemos el ID del usuario desde los parámetros
+        console.log(user_id);
+        const chats = await Chat.find({
+            $or: [{ participant_one: user_id }, { participant_two: user_id }]
+        })
+        .populate("participant_one")
+        .populate("participant_two")
+        .exec();
+
+        const filteredChats = [];
+        for await (const chat of chats) {
+            const lastMessage = await getLastMessage(chat._id);
+
+            // Determinamos quién es el otro participante
+            const otherParticipant = chat.participant_one._id.toString() === user_id
+                ? chat.participant_two
+                : chat.participant_one;
+
+            filteredChats.push({
+                _id: chat._id,
+                participant: {
+                    _id: otherParticipant._id,
+                    email: otherParticipant.email,
+                    nombre: otherParticipant.nombre || null,
+                    apellido: otherParticipant.apellido || null,
+                    avatar: otherParticipant.avatar || null
+                },
+                last_message_date: lastMessage?.createdAt || null,
+                last_message: lastMessage || null
+            });
+        }
+
+        res.status(200).send(filteredChats);
+    } catch (error) {
+        console.error("Error en getChatsFiltered:", error);
+        res.status(400).send({ msg: "Error al obtener los chats", error });
+    }
+}
+
+async function getLastMessage(chat_id) {
+    try {
+        return await ChatMessage.findOne({ chat: chat_id }).sort({ createdAt: -1 });
+    } catch (error) {
+        console.error("Error al obtener el último mensaje:", error);
+        return null;
+    }
+}
+
+
+
 
 export const ChatController = {
     create,
     getAll,
     deleteChat,
     getChat,
+    getChatsFiltered,
 };
