@@ -64,7 +64,7 @@ async function sendImage(req, res) {
             type
         });
 
-        //await chat_message.save();
+        await chat_message.save();
         const data = await chat_message.populate("user");
         console.log("📡 Emitiendo archivo por socket:", {
             chat_id,
