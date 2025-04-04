@@ -29,7 +29,8 @@ export async function emitChatUpdate(io, chat_id, user_id) {
             last_message: lastMessage
         };
 
-        io.to(`${chat_id}_notify`).emit("chat_updated", payload);
+      
+        io.to(`${user_id}_notify`).emit("message_notify", payload)
     } catch (err) {
         console.error("❌ Error al emitir chat_updated:", err);
     }
