@@ -70,6 +70,29 @@ mongoose.connect(mongoDbUrl, {
                 console.error("❌ Error al enviar mensaje:", error);
             }
         });
+
+        socket.on("send_file", async (data) => {
+            try {
+                const { chat_id, user_id, message, type } = data;
+        
+                const chat_message = new ChatMessage({
+                    chat: chat_id,
+                    user: user_id,
+                    message,
+                    type,
+                    createdAt: moment().tz("America/Mexico_City").toDate(),
+                    updatedAt: moment().tz("America/Mexico_City").toDate(),
+                });
+        
+                await chat_message.save();
+                const populated = await chat_message.populate("user");
+        
+                console.log(`📡 Emitiendo ${type} a la sala:`, chat_id);
+                io.to(chat_id).emit("message", populated); 
+            } catch (error) {
+                console.error("❌ Error al enviar archivo por socket:", error);
+            }
+        });
     });
 
 })
