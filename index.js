@@ -63,13 +63,20 @@ mongoose.connect(mongoDbUrl, {
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
         
-                console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
-                io.to(chat_id).emit("message", populated); 
-                io.to(`${chat_id}_notify`).emit("chat_updated", {
-                    chat_id: chat_id,
-                    last_message: populated, // el mensaje recién guardado
+                console.log("📡 Enviando mensaje a la sala:", chat_id);
+                io.to(chat_id).emit("message", populated);
+        
+                // Emitir a la lista de chats (solo al otro usuario)
+                const chat = await Chat.findById(chat_id);
+                const receiver_id = chat.participant_one.toString() === user_id
+                    ? chat.participant_two
+                    : chat.participant_one;
+        
+                io.to(`${receiver_id}_notify`).emit("chat_updated", {
+                    chat_id,
+                    last_message: populated
                 });
-                console.log("✅ Mensaje emitido a", chat_id);
+        
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
             }
@@ -90,12 +97,18 @@ mongoose.connect(mongoDbUrl, {
         
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
+                const receiver_id = chat.participant_one.toString() === user_id
+                    ? chat.participant_two
+                    : chat.participant_one;
+        
+                io.to(`${receiver_id}_notify`).emit("chat_updated", {
+                    chat_id,
+                    last_message: populated
+                });
+        
         
                 console.log(`📡 Emitiendo ${type} a la sala:`, chat_id);
-                io.to(`${chat_id}_notify`).emit("chat_updated", {
-                    chat_id: chat_id,
-                    last_message: populated, // el mensaje recién guardado
-                });
+               
                 io.to(chat_id).emit("message", populated); 
             } catch (error) {
                 console.error("❌ Error al enviar archivo por socket:", error);
