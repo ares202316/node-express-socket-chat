@@ -23,7 +23,7 @@ async function sendMessage(req, res) {
         const data = await chat_message.populate("user");
         
         io.sockets.in(chat_id).emit("message", data);
-        io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
+        
         
         res.status(201).send({});
     } catch (error) {
@@ -73,7 +73,7 @@ async function sendImage(req, res) {
             type
           });
         io.sockets.in(chat_id).emit("message", data);
-        io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
+       
 
         res.status(201).send({
             msg: `${type} enviado correctamente`,

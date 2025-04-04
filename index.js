@@ -66,7 +66,7 @@ mongoose.connect(mongoDbUrl, {
                 console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
                 io.to(chat_id).emit("message", populated); 
                 console.log("✅ Mensaje emitido a", chat_id);   
-               
+                io.to(`${chat_id}_notify`).emit("chat_updated", populated);
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
             }
@@ -90,7 +90,7 @@ mongoose.connect(mongoDbUrl, {
         
                 console.log(`📡 Emitiendo ${type} a la sala:`, chat_id);
                 io.to(chat_id).emit("message", populated); 
-               
+                io.to(`${chat_id}_notify`).emit("chat_updated", populated);
             } catch (error) {
                 console.error("❌ Error al enviar archivo por socket:", error);
             }
