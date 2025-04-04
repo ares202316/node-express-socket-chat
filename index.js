@@ -31,25 +31,26 @@ mongoose.connect(mongoDbUrl, {
     //  Socket.IO conexión
     io.on("connection", (socket) => {
         console.log(" NUEVO USUARIO CONECTADO");
-    
+
         socket.on("disconnect", () => {
             console.log(" USUARIO DESCONECTADO");
         });
-    
+
         socket.on("subscribe", (room) => {
             socket.join(room);
             console.log(` Usuario se unió al chat ${room}`);
         });
-    
+
         socket.on("unsubscribe", (room) => {
             socket.leave(room);
             console.log(` Usuario salió del chat ${room}`);
         });
-    
+
+        // Aquí escuchamos el envío de mensajes
         socket.on("send_message", async (data) => {
             try {
                 const { chat_id, user_id, message, type = "TEXT" } = data;
-    
+        
                 const chat_message = new ChatMessage({
                     chat: chat_id,
                     user: user_id,
@@ -58,30 +59,23 @@ mongoose.connect(mongoDbUrl, {
                     createdAt: moment().tz("America/Mexico_City").toDate(),
                     updatedAt: moment().tz("America/Mexico_City").toDate(),
                 });
-    
+        
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
-    
+        
                 console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
-                io.to(chat_id).emit("message", populated);
+                io.to(chat_id).emit("message", populated); 
                 console.log("✅ Mensaje emitido a", chat_id);
-    
-                // Notificación para el otro usuario
-                const otherUserId = await getOtherParticipantId(chat_id, user_id);
-                if (otherUserId) {
-                    io.to(`${otherUserId}_notify`).emit("message_notify", populated);
-                    console.log(`🔔 Notificación enviada a ${otherUserId}_notify`);
-                }
-    
+                
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
             }
         });
-    
+
         socket.on("send_file", async (data) => {
             try {
                 const { chat_id, user_id, message, type } = data;
-    
+        
                 const chat_message = new ChatMessage({
                     chat: chat_id,
                     user: user_id,
@@ -90,40 +84,20 @@ mongoose.connect(mongoDbUrl, {
                     createdAt: moment().tz("America/Mexico_City").toDate(),
                     updatedAt: moment().tz("America/Mexico_City").toDate(),
                 });
-    
+        
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
-    
+        
                 console.log(`📡 Emitiendo ${type} a la sala:`, chat_id);
-                io.to(chat_id).emit("message", populated);
-    
-                const otherUserId = await getOtherParticipantId(chat_id, user_id);
-                if (otherUserId) {
-                    io.to(`${otherUserId}_notify`).emit("message_notify", populated);
-                    console.log(`🔔 Notificación enviada a ${otherUserId}_notify`);
-                }
-    
+                io.to(chat_id).emit("message", populated); 
             } catch (error) {
                 console.error("❌ Error al enviar archivo por socket:", error);
             }
         });
     });
-    
-    // 🔧 Función para encontrar al otro participante
-    async function getOtherParticipantId(chat_id, sender_id) {
-        const chat = await Chat.findById(chat_id).lean();
-        if (!chat) return null;
-    
-        if (chat.participant_one.toString() === sender_id) {
-            return chat.participant_two.toString();
-        } else {
-            return chat.participant_one.toString();
-        }
-    }
-    
 
 })
 .catch((error) => {
     console.error("Error conectando a MongoDB:", error);
     process.exit(1);
-});
+}); 
