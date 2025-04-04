@@ -71,7 +71,7 @@ mongoose.connect(mongoDbUrl, {
             }
         });
 
-        socket.on("send_file", async (data) => {
+       /* socket.on("send_file", async (data) => {
             try {
                 const { chat_id, user_id, message, type } = data;
         
@@ -92,7 +92,7 @@ mongoose.connect(mongoDbUrl, {
             } catch (error) {
                 console.error("❌ Error al enviar archivo por socket:", error);
             }
-        });
+        });*/
     });
 
 })
