@@ -78,7 +78,7 @@ async function sendImage(req, res) {
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: chat_message._id,
-            message_path: chat_message.message  // ← Esta línea te dice cuál es la ruta final
+       
           });
 
     } catch (error) {
