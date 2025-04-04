@@ -66,6 +66,12 @@ mongoose.connect(mongoDbUrl, {
                 console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
                 io.to(chat_id).emit("message", populated); 
                 console.log("✅ Mensaje emitido a", chat_id);
+                io.to(chat_id).emit("message", data);
+                const lastMessage = await ChatMessage.findOne({ chat: chat_id })
+                .sort({ createdAt: -1 })
+                .populate("user");
+            io.to(`${user_id}_notify`).emit("message_notify", lastMessage);
+
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
             }
