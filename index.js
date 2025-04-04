@@ -55,7 +55,7 @@ mongoose.connect(mongoDbUrl, {
                     chat: chat_id,
                     user: user_id,
                     message,
-                    type: "TEXT",
+                    type,
                     createdAt: moment().tz("America/Mexico_City").toDate(),
                     updatedAt: moment().tz("America/Mexico_City").toDate(),
                 });
