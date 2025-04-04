@@ -33,32 +33,53 @@ async function sendMessage(req, res) {
 }
 
 async function sendImage(req, res) {
-    console.log(" Entró a sendImage"); // <--- NUEVO LOG
     try {
         console.log("Archivos recibidos:", req.files);
         console.log("Body recibido:", req.body);
 
         if (!req.files || !req.files.image) {
-            console.log(" No se recibió archivo");
             return res.status(400).send({ msg: "No se recibió ninguna imagen" });
         }
 
-        // ...
+        const { chat_id } = req.body;
+        const { user_id } = req.user;
 
-        console.log("📡 Enviando multimedia a la sala:", chat_id);
-        io.to(chat_id).emit("message", data);
+        const file = req.files.image;
+        const mimetype = file.type; // <-- esta es la clave 🔑
 
-        return res.status(201).send({
+        let type = "FILE"; // por defecto
+
+        if (mimetype.startsWith("image/")) {
+            type = "IMAGE";
+        } else if (mimetype.startsWith("video/")) {
+            type = "VIDEO";
+        } else if (mimetype.startsWith("audio/")) {
+            type = "AUDIO";
+        }
+
+        const chat_message = new ChatMessage({
+            chat: chat_id,
+            user: user_id,
+            message: getFilePath(file),
+            type
+        });
+
+        await chat_message.save();
+        const data = await chat_message.populate("user");
+
+        io.sockets.in(chat_id).emit("message", data);
+        io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
+
+        res.status(201).send({
             msg: `${type} enviado correctamente`,
-            message_id: chat_message._id
+            message_id: chat_message._id  //  envías el ID del mensaje
         });
 
     } catch (error) {
-        console.error(" Error en sendImage:", error);
+        console.error("Error al enviar archivo:", error);
         res.status(500).send({ msg: "Error interno al enviar el archivo" });
     }
 }
-
 
 async function getAll(req, res){
     const {chat_id} = req.params;
