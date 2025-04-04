@@ -70,7 +70,10 @@ async function sendImage(req, res) {
         io.sockets.in(chat_id).emit("message", data);
         io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
 
-        res.status(201).send({ msg: `${type} enviado correctamente` });
+        res.status(201).send({
+            msg: `${type} enviado correctamente`,
+            message_id: chat_message._id  //  envías el ID del mensaje
+        });
 
     } catch (error) {
         console.error("Error al enviar archivo:", error);
