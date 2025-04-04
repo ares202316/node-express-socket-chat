@@ -49,8 +49,8 @@ mongoose.connect(mongoDbUrl, {
         // Aquí escuchamos el envío de mensajes
         socket.on("send_message", async (data) => {
             try {
-                const { chat_id, user_id, message } = data;
-
+                const { chat_id, user_id, message, type = "TEXT" } = data;
+        
                 const chat_message = new ChatMessage({
                     chat: chat_id,
                     user: user_id,
@@ -59,15 +59,15 @@ mongoose.connect(mongoDbUrl, {
                     createdAt: moment().tz("America/Mexico_City").toDate(),
                     updatedAt: moment().tz("America/Mexico_City").toDate(),
                 });
-
+        
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
-
-                console.log("📡 Enviando multimedia a la sala:", chat_id);
+        
+                console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
                 io.to(chat_id).emit("message", populated); 
-                console.log("Mensaje enviado y emitido al chat", chat_id);
+                console.log("✅ Mensaje emitido a", chat_id);
             } catch (error) {
-                console.error("Error al enviar mensaje:", error);
+                console.error("❌ Error al enviar mensaje:", error);
             }
         });
     });
