@@ -4,6 +4,7 @@ import { PORT, IP_SERVER, DB_USER, DB_PASSWORD, DB_HOST } from "./constants.js";
 import { Server } from "socket.io";
 import moment from "moment-timezone";
 import { ChatMessage } from "./models/index.js"; // Ajusta a tu ruta real
+import { emitChatUpdate } from "./utils/emitChatUpdate.js";
 
 const mongoDbUrl = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}`;
 
@@ -62,16 +63,15 @@ mongoose.connect(mongoDbUrl, {
         
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
+
+                io.to(chat_id).emit("message", populated);
+                await emitChatUpdate(io, chat_id, user_id);// ✅ correcto
         
-                console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
-                io.to(chat_id).emit("message", populated); 
-                console.log("✅ Mensaje emitido a", chat_id);   
-                io.to(`${chat_id}_notify`).emit("chat_updated", populated);
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
             }
         });
-
+        
         socket.on("send_file", async (data) => {
             try {
                 const { chat_id, user_id, message, type } = data;
@@ -87,10 +87,10 @@ mongoose.connect(mongoDbUrl, {
         
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
+
+                io.to(chat_id).emit("message", populated);
+                await emitChatUpdate(io, chat_id, user_id);// ✅ correcto
         
-                console.log(`📡 Emitiendo ${type} a la sala:`, chat_id);
-                io.to(chat_id).emit("message", populated); 
-                io.to(`${chat_id}_notify`).emit("chat_updated", populated);
             } catch (error) {
                 console.error("❌ Error al enviar archivo por socket:", error);
             }

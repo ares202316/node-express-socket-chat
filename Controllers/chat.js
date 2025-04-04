@@ -156,4 +156,5 @@ export const ChatController = {
     deleteChat,
     getChat,
     getChatsFiltered,
+    getLastMessage,
 };
