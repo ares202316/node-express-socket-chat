@@ -1,12 +1,11 @@
-import { Server as SocketServer} from "socket.io";
+// socket.js
+import { Server } from "socket.io";
+export let io;
 
-export let io = null;
-
-export function initSocketServer(server){
-    io = new SocketServer(server, {
-        cors:{
-            origin: "*",
-        },
-    });
-
-}
+export const initSocketServer = (server) => {
+  io = new Server(server, {
+    cors: {
+      origin: "*"
+    }
+  });
+};

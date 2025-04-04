@@ -63,7 +63,10 @@ mongoose.connect(mongoDbUrl, {
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
 
-                console.log("📡 Enviando multimedia a la sala:", chat_id);
+                console.log("📡 Emitiendo mensaje multimedia al chat:", chat_id);
+                console.log("Mensaje completo:", data);
+                
+                io.to(chat_id).emit("message", data);
                 io.to(chat_id).emit("message", populated); 
                 console.log("Mensaje enviado y emitido al chat", chat_id);
             } catch (error) {
