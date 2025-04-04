@@ -24,6 +24,17 @@ api.get("/avatar/:filename", (req, res) => {
     });
 });
 
+api.get("/imagenes/:filename", (req, res) => {
+    const { filename } = req.params;
+    const filePath = path.join(__dirname, "..", "uploads", "imagenes", filename);
+
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(404).send({ error: "Archivo no encontrado" });
+        }
+    });
+});
+
 
 /*api.get("/auth/test_md",[mdAuth.asureAuth], (req, res) => {
         console.log("Datos del usuario autenticado");
