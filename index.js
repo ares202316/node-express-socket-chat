@@ -55,7 +55,7 @@ mongoose.connect(mongoDbUrl, {
                     chat: chat_id,
                     user: user_id,
                     message,
-                    type: "TEXT",
+                    type,
                     createdAt: moment().tz("America/Mexico_City").toDate(),
                     updatedAt: moment().tz("America/Mexico_City").toDate(),
                 });
@@ -65,8 +65,8 @@ mongoose.connect(mongoDbUrl, {
 
                 console.log("📡 Emitiendo mensaje multimedia al chat:", chat_id);
                 console.log("Mensaje completo:", data);
+
                 
-                io.to(chat_id).emit("message", data);
                 io.to(chat_id).emit("message", populated); 
                 console.log("Mensaje enviado y emitido al chat", chat_id);
             } catch (error) {
