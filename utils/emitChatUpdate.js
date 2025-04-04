@@ -1,16 +1,13 @@
 import { Chat } from "../models/index.js";
-import { ChatController  } from "../Controllers/index.js";
+import { ChatController } from "../Controllers/index.js";
 
 export async function emitChatUpdate(io, chat_id, user_id) {
-
-    
     try {
         const chat = await Chat.findById(chat_id)
             .populate("participant_one")
             .populate("participant_two");
-        
-            const ChChatControlleratC = ChatController.getLastMessageñ
-        const lastMessage = await ChChatControlleratC(chat_id);
+
+        const lastMessage = await ChatController.getLastMessage(chat_id);
 
         const otherParticipant = chat.participant_one._id.toString() === user_id
             ? chat.participant_two
@@ -29,9 +26,8 @@ export async function emitChatUpdate(io, chat_id, user_id) {
             last_message: lastMessage
         };
 
-      
-        io.to(`${user_id}_notify`).emit("message_notify", payload)
+        io.to(`${user_id}_notify`).emit("message_notify", payload);
     } catch (err) {
-        console.error("❌ Error al emitir chat_updated:", err);
+        console.error("❌ Error al emitir message_notify:", err);
     }
 }
