@@ -63,8 +63,8 @@ mongoose.connect(mongoDbUrl, {
                 await chat_message.save();
                 const populated = await chat_message.populate("user");
 
-                // Emitir el mensaje en tiempo real solo a la sala correspondiente
-                io.to(chat_id).emit("message", populated);
+                console.log("📡 Enviando multimedia a la sala:", chat_id);
+                io.to(chat_id).emit("message", data); 
                 console.log("Mensaje enviado y emitido al chat", chat_id);
             } catch (error) {
                 console.error("Error al enviar mensaje:", error);
