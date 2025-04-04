@@ -72,7 +72,8 @@ async function sendImage(req, res) {
 
         res.status(201).send({
             msg: `${type} enviado correctamente`,
-            message_id: chat_message._id  //  envías el ID del mensaje
+            message_id: chat_message._id,
+            message: data  //  envías el ID del mensaje
         });
 
     } catch (error) {
