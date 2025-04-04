@@ -66,15 +66,20 @@ async function sendImage(req, res) {
 
         await chat_message.save();
         const data = await chat_message.populate("user");
-
+        console.log("📡 Emitiendo archivo por socket:", {
+            chat_id,
+            user_id,
+            message: getFilePath(file),
+            type
+          });
         io.sockets.in(chat_id).emit("message", data);
         io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
 
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: chat_message._id,
-            message: data  //  envías el ID del mensaje
-        });
+            message_path: chat_message.message  // ← Esta línea te dice cuál es la ruta final
+          });
 
     } catch (error) {
         console.error("Error al enviar archivo:", error);
