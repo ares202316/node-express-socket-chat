@@ -24,7 +24,10 @@ async function sendMessage(req, res) {
         
         io.sockets.in(chat_id).emit("message", data);
         io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
-        
+        io.to(`${chat_id}_notify`).emit("chat_updated", {
+            chat_id: chat_id,
+            last_message: populated, // el mensaje recién guardado
+        });
         res.status(201).send({});
     } catch (error) {
         console.error("Error al enviar mensaje:", error);
@@ -74,7 +77,10 @@ async function sendImage(req, res) {
           });
         io.sockets.in(chat_id).emit("message", data);
         io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
-
+        io.to(`${chat_id}_notify`).emit("chat_updated", {
+            chat_id: chat_id,
+            last_message: populated, // el mensaje recién guardado
+        });
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: chat_message._id,
