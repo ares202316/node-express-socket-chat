@@ -74,11 +74,11 @@ async function sendImage(req, res) {
           });
         io.sockets.in(chat_id).emit("message", data);
         io.sockets.in(`${chat_id}_notify`).emit("message_notify", data);
-        
+
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: chat_message._id,
-       
+            message_path: chat_message.message  // ← Esta línea te dice cuál es la ruta final
           });
 
     } catch (error) {

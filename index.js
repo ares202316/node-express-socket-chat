@@ -65,7 +65,6 @@ mongoose.connect(mongoDbUrl, {
         
                 console.log("📡 Enviando mensaje a la sala:", chat_id, "tipo:", type);
                 io.to(chat_id).emit("message", populated); 
-                
                 console.log("✅ Mensaje emitido a", chat_id);
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:", error);
