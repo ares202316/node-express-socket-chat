@@ -158,7 +158,7 @@ export const ChatMessageController = {
     getAll,
     getTotalMessage,
     getLastMessage,
-    deleteMessage,
+    deleteMessageSocket,
   
     
 };
