@@ -4,7 +4,7 @@ import "dotenv/config";
 import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
-import { initSocketServer} from "./utils/index.js";
+import { initSocketServer, io} from "./utils/index.js";
 import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes} from "./routes/index.js";
 import path from "path";
 
@@ -28,6 +28,10 @@ app.use(cors());
 app.use(morgan("dev"));
 
 //Configuracion Rutas
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
