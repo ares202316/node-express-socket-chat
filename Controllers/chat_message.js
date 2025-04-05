@@ -130,7 +130,22 @@ async function getLastMessage(req, res) {
     }
 }  
 
+async function deleteMessage(req, res) {
+    try {
+        const messageId = req.params.id;
 
+        const deleted = await ChatMessage.findByIdAndDelete(messageId);
+
+        if (!deleted) {
+            return res.status(404).send({ msg: "Mensaje no encontrado" });
+        }
+
+        res.status(200).send({ msg: "Mensaje eliminado correctamente" });
+    } catch (error) {
+        console.error("Error al eliminar mensaje:", error);
+        res.status(500).send({ msg: "Error del servidor", error });
+    }
+}
 
 
 export const ChatMessageController = {
@@ -139,6 +154,7 @@ export const ChatMessageController = {
     getAll,
     getTotalMessage,
     getLastMessage,
+    deleteMessage,
   
     
 };
