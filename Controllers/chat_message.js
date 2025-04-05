@@ -133,32 +133,41 @@ async function getLastMessage(req, res) {
 async function deleteMessageSocket(req, res) {
     try {
         const messageId = req.params.id;
+        console.log("🧾 ID del mensaje recibido para eliminar:", messageId);
 
-        const deleted = await ChatMessage.findByIdAndDelete(messageId);
-
-        if (!deleted) {
+        // 1️⃣ Buscar el mensaje antes de eliminar
+        const message = await ChatMessage.findById(messageId);
+        if (!message) {
+            console.log("⚠️ No se encontró el mensaje con ID:", messageId);
             return res.status(404).send({ msg: "Mensaje no encontrado" });
         }
 
-        if (!deleted.chat) {
-            return res.status(500).send({ msg: "El mensaje eliminado no tenía chat asociado" });
+        const chatId = message.chat?.toString();
+        console.log("💬 Chat ID asociado al mensaje:", chatId);
+
+        if (!chatId) {
+            console.log("❌ El mensaje no tiene campo 'chat'");
+            return res.status(500).send({ msg: "El mensaje no tiene chat asociado" });
         }
 
-        const chatId = deleted.chat.toString();
+        // 2️⃣ Eliminar el mensaje
+        await ChatMessage.findByIdAndDelete(messageId);
+        console.log("🗑️ Mensaje eliminado con ID:", message._id);
 
+        // 3️⃣ Emitir a la sala correspondiente
         req.io.to(chatId).emit("message_deleted", {
-            _id: deleted._id,
+            _id: message._id,
             chat: chatId
         });
+        console.log("📢 Emitido message_deleted al chat:", chatId);
 
-        res.status(200).send({ msg: "Mensaje eliminado", messageId: deleted._id });
+        res.status(200).send({ msg: "Mensaje eliminado", messageId: message._id });
 
     } catch (error) {
         console.error("❌ Error en deleteMessageSocket:", error);
         res.status(500).send({ msg: "Error del servidor", error });
     }
 }
-
 
 
 export const ChatMessageController = {
