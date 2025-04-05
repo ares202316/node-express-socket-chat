@@ -130,19 +130,23 @@ async function getLastMessage(req, res) {
     }
 }  
 
-async function deleteMessage(req, res) {
+async function deleteMessageSocket(req, res) {
     try {
         const messageId = req.params.id;
 
         const deleted = await ChatMessage.findByIdAndDelete(messageId);
-
         if (!deleted) {
             return res.status(404).send({ msg: "Mensaje no encontrado" });
         }
 
-        res.status(200).send({ msg: "Mensaje eliminado correctamente" });
+        // Emitir evento al chat al que pertenece el mensaje
+        req.io.to(deleted.chat.toString()).emit("message_deleted", {
+            _id: deleted._id,
+            chat: deleted.chat
+        });
+
+        res.status(200).send({ msg: "Mensaje eliminado", messageId: deleted._id });
     } catch (error) {
-        console.error("Error al eliminar mensaje:", error);
         res.status(500).send({ msg: "Error del servidor", error });
     }
 }
