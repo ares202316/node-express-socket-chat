@@ -16,7 +16,7 @@ api.get("/chat/message/total/:chat_id", [mdAuth.asureAuth], ChatMessageControlle
 
 api.get("/chat/message/last/:chat_id", [mdAuth.asureAuth], ChatMessageController.getLastMessage);
 
-api.delete("/message/:id", [mdAuth.asureAuth], deleteMessage);
+api.delete("/message/:id", [mdAuth.asureAuth], ChatMessageController.deleteMessage);
 
 export const chatMessageRoutes = api;
 
