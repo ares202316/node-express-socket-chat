@@ -5,7 +5,7 @@ import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import { initSocketServer, io} from "./utils/index.js";
-import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes} from "./routes/index.js";
+import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes,GroupRoutes,GroupMessageRoutes } from "./routes/index.js";
 import path from "path";
 
 const app = express();
@@ -38,6 +38,10 @@ app.use("/api", userRoutes);
 app.use("/api", ChaRoutes);
 app.use("/api", chatMessageRoutes);
 app.use("/api", authImagenes);
+app.use("/api", authImagenes);
+app.use("/api", authImagenes);
+app.use("/api", GroupRoutes);
+app.use("/api", GroupMessageRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 
