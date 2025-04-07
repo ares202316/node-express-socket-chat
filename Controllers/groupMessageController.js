@@ -113,7 +113,7 @@ async function countGroupMessages(req, res) {
 
         // 📡 Emitimos con Pusher
         pusher.trigger(`group-${group_id}`, "new-group-message", data);
-
+            console.log(data);
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: groupMessage._id,
