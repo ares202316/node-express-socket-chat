@@ -1,5 +1,5 @@
-import { GroupMessage } from "../models/group_message.js";
-import { Group } from "../models/groups.js";
+import { GroupMessage } from "../models/index.js";
+
 import Pusher from "pusher";
 import { getFilePath } from "../utils/image.js";
 
@@ -20,32 +20,30 @@ pusher.trigger("my-channel", "my-event", {
 // Enviar mensaje de texto
 async function sendGroupMessage(req, res) {
     try {
-        const { groupId, message, type = "TEXT" } = req.body;
-        const userId = req.user.id;
+        const { groupId, message } = req.body;
+        const userId = req.user.user_id; // ← CORREGIDO ✅
 
-        const newMessage = new GroupMessage({
+        const newMessage = await GroupMessage.create({
             group: groupId,
             user: userId,
             message,
-            type
+            type: "TEXT",
         });
 
-        await newMessage.save();
+        const data = await GroupMessage.findById(newMessage._id).populate("user");
 
-        pusher.trigger(`group-${groupId}`, "new-message", {
-            _id: newMessage._id,
-            group: groupId,
-            user: userId,
-            message,
-            type,
-            createdAt: newMessage.createdAt
-        });
+        console.log("📨 Mensaje enviado:", data);
 
-        res.status(201).send({ message: newMessage });
+        pusher.trigger(`group-${groupId}`, "new-message", data);
+
+        res.status(201).send({ message: data });
     } catch (error) {
+        console.error("❌ Error al enviar mensaje:", error);
         res.status(500).send({ msg: "Error al enviar mensaje", error });
     }
 }
+
+
 
 // Obtener mensajes de un grupo
 async function getGroupMessages(req, res) {

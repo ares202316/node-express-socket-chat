@@ -7,10 +7,7 @@ const GroupMessageSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Group",
     },
-    user:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     message: String,
     type: {
         type: String,

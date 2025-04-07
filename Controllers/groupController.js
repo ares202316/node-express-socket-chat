@@ -26,9 +26,10 @@ async function createGroup(req, res) {
 // Obtener todos los grupos de un usuario
 async function getGroupsByUser(req, res) {
     try {
-        const userId = req.user.id;
+        const userId = req.user.user_id; // <-- Cambiado aquí
 
         const groups = await Group.find({ participants: userId }).populate("creator participants");
+
         res.status(200).send({ groups });
     } catch (error) {
         res.status(500).send({ msg: "Error obteniendo grupos", error });
