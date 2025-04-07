@@ -129,7 +129,7 @@ async function countGroupMessages(req, res) {
 async function deleteGroupMessage(req, res) {
     try {
         const messageId = req.params.id;
-        const userId = req.user.id;
+        const userId = req.user.user_id; // <- aquí estaba el problema
 
         const message = await GroupMessage.findById(messageId);
 
