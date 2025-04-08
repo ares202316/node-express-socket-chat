@@ -85,7 +85,7 @@ async function updateGroup(req, res) {
         });
 
         pusher.trigger(`group-${groupId}`, "group-updated", updated);
-
+        console.log(updatedData);
         res.status(200).send(updatedData);
     } catch (error) {
         console.log(error);
