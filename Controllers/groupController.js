@@ -97,7 +97,7 @@ async function updateGroup(req, res) {
 async function leaveGroup(req, res) {
     try {
         const groupId = req.params.id;
-        const userId = req.user.id;
+        const userId = req.user.user_id;
 
         const group = await Group.findByIdAndUpdate(groupId, {
             $pull: { participants: userId }
