@@ -12,23 +12,34 @@ const pusher = new Pusher({
 });
 
 async function sendSystemMessage(groupId, content) {
-    const systemMessage = new GroupMessage({
-      group: groupId,
-      message: content,
-      type: "SYSTEM", // Puedes usar SYSTEM para distinguirlo
-      user: null // opcional, si no quieres asociarlo a un usuario
-    });
-  
-    await systemMessage.save();
-  
-    pusher.trigger(`group-${groupId}`, "new-group-message", {
-      _id: systemMessage._id,
-      message: systemMessage.message,
-      type: "SYSTEM",
-      user: null,
-      createdAt: systemMessage.createdAt
-    });
-  }
+    try {
+        const systemMessage = new GroupMessage({
+            group: groupId,
+            message: content,
+            type: "SYSTEM",
+            user: null
+        });
+
+        await systemMessage.save();
+
+        console.log("✅ [BACKEND] Mensaje SYSTEM guardado:");
+        console.log(systemMessage);
+
+        const payload = {
+            _id: systemMessage._id,
+            message: systemMessage.message,
+            type: "SYSTEM",
+            user: null,
+            createdAt: systemMessage.createdAt
+        };
+
+        console.log("📡 [BACKEND] Enviando mensaje SYSTEM por Pusher:", payload);
+
+        pusher.trigger(`group-${groupId}`, "new-group-message", payload);
+    } catch (error) {
+        console.error("❌ Error al enviar mensaje SYSTEM:", error);
+    }
+}
   
 // Crear un grupo
 async function createGroup(req, res) {
@@ -136,6 +147,7 @@ async function leaveGroup(req, res) {
 
         res.status(200).send({ group });
     } catch (error) {
+        console.log(error);
         res.status(500).send({ msg: "Error al salir del grupo", error });
     }
 }
@@ -154,9 +166,10 @@ async function addParticipants(req, res) {
         const users = await User.find({ _id: { $in: participants } }).select("nombre");
         const names = users.map(u => u.nombre).join(", ");
         await sendSystemMessage(groupId, `${names} se unió al grupo`);
-        
+
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
+        console.log(error);
         res.status(500).send({ msg: "Error al añadir participantes", error });
     }
 }
@@ -176,6 +189,7 @@ async function banParticipant(req, res) {
         await sendSystemMessage(groupId, `${user.nombre} fue expulsado del grupo`);
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
+        console.log(error);
         res.status(500).send({ msg: "Error al banear usuario", error });
     }
 }
