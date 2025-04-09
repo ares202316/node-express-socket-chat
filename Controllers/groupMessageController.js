@@ -90,7 +90,7 @@ async function countGroupMessages(req, res) {
         const { group_id } = req.body;
         const { user_id } = req.user;
         const file = req.files.image;
-        const mimetype = file.type;
+        const mimetype = file.mimetype;
 
         let type = "FILE";
         if (mimetype.startsWith("image/")) {
