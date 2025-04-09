@@ -6,7 +6,7 @@ import multiparty from "connect-multiparty";
 const api = express.Router();
 const mdUpload = multiparty({uploadDir: "./uploads/imagenes"});
 
-api.post("/group", [mdAuth.asureAuth], GroupController.createGroup);
+api.post("/group/create", [mdAuth.asureAuth,mdUpload], GroupController.createGroup);
 api.get("/group", [mdAuth.asureAuth], GroupController.getUserGroups);
 api.get("/group/me", [mdAuth.asureAuth], GroupController.getGroupsByUser);
 api.get("/group/:id", [mdAuth.asureAuth], GroupController.getGroupInfo);

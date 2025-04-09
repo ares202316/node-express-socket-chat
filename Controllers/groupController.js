@@ -15,24 +15,33 @@ const pusher = new Pusher({
 // Crear un grupo
 async function createGroup(req, res) {
     try {
-        const { name, image, participants } = req.body;
-        const creator = req.user.id;
+        const name = req.body.name;
+        const userId = req.user.user_id;
 
-        const newGroup = new Group({
+        console.log("🧾 Nombre:", name);
+        console.log("📦 Archivos:", req.files);
+        console.log("👤 Usuario:", userId);
+
+        const groupData = {
             name,
-            image,
-            creator,
-            participants: [...participants, creator]
-        });
+            participants: [userId]
+        };
 
+        if (req.files && req.files.image) {
+            const imagePath = getFilePath(req.files.image);
+            groupData.image = imagePath;
+        }
+
+        const newGroup = new Group(groupData);
         await newGroup.save();
-        const populatedGroup = await newGroup.populate("creator participants");
+
+        const populatedGroup = await Group.findById(newGroup._id).populate("participants");
 
         pusher.trigger(`group-${newGroup._id}`, "group-created", populatedGroup);
 
         res.status(201).send({ group: populatedGroup });
     } catch (error) {
-        console.log(error);
+        console.log("❌ Error en createGroup:", error);
         res.status(500).send({ msg: "Error creando grupo", error });
     }
 }
