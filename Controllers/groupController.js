@@ -2,6 +2,7 @@ import { Group } from "../models/groups.js";
 import { User } from "../models/user.js";
 import Pusher from "pusher";
 import {getFilePath} from "../utils/index.js";
+import { GroupMessage } from "../models/index.js";
 
 const pusher = new Pusher({
   appId: "1969942",
