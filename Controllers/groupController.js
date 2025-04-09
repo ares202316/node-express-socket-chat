@@ -11,7 +11,25 @@ const pusher = new Pusher({
   useTLS: true
 });
 
-
+async function sendSystemMessage(groupId, content) {
+    const systemMessage = new GroupMessage({
+      group: groupId,
+      message: content,
+      type: "SYSTEM", // Puedes usar SYSTEM para distinguirlo
+      user: null // opcional, si no quieres asociarlo a un usuario
+    });
+  
+    await systemMessage.save();
+  
+    pusher.trigger(`group-${groupId}`, "new-group-message", {
+      _id: systemMessage._id,
+      message: systemMessage.message,
+      type: "SYSTEM",
+      user: null,
+      createdAt: systemMessage.createdAt
+    });
+  }
+  
 // Crear un grupo
 async function createGroup(req, res) {
     try {
@@ -113,6 +131,8 @@ async function leaveGroup(req, res) {
         }, { new: true }).populate("creator participants");
 
         pusher.trigger(`group-${groupId}`, "participant-left", { userId });
+        const user = await User.findById(userId);
+        await sendSystemMessage(groupId, `${user.nombre} salió del grupo`);
 
         res.status(200).send({ group });
     } catch (error) {
@@ -131,7 +151,10 @@ async function addParticipants(req, res) {
         }, { new: true }).populate("creator participants");
 
         pusher.trigger(`group-${groupId}`, "participants-added", { participants });
-
+        const users = await User.find({ _id: { $in: participants } }).select("nombre");
+        const names = users.map(u => u.nombre).join(", ");
+        await sendSystemMessage(groupId, `${names} se unió al grupo`);
+        
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
         res.status(500).send({ msg: "Error al añadir participantes", error });
@@ -149,7 +172,8 @@ async function banParticipant(req, res) {
         }, { new: true }).populate("creator participants");
 
         pusher.trigger(`group-${groupId}`, "participant-banned", { userId });
-
+        const user = await User.findById(userId);
+        await sendSystemMessage(groupId, `${user.nombre} fue expulsado del grupo`);
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
         res.status(500).send({ msg: "Error al banear usuario", error });
