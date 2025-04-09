@@ -11,7 +11,7 @@ const GroupMessageSchema = mongoose.Schema({
     message: String,
     type: {
         type: String,
-        enum: ["TEXT", "IMAGE", "VIDEO", "FILE", "AUDIO"],
+        enum: ["TEXT", "IMAGE", "VIDEO", "FILE", "AUDIO","SYSTEM"],
     },
 },
 {
