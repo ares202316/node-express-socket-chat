@@ -1,5 +1,5 @@
 import { GroupMessage } from "../models/index.js";
-
+import PushNotifications from "@pusher/push-notifications-server"
 import Pusher from "pusher";
 import { getFilePath } from "../utils/image.js";
 
@@ -13,6 +13,11 @@ const pusher = new Pusher({
   useTLS: true
 });
 
+const beamsClient = new PushNotifications({
+    instanceId: '596e0803-3ebd-41f5-8521-868757c854c8',
+    secretKey: 'D72BC9C989CD6D36280CFB83EAF480C675AA99FF403BE7DE16156691381ED056',
+  });
+
 pusher.trigger("my-channel", "my-event", {
   message: "hello world"
 });
@@ -20,35 +25,55 @@ pusher.trigger("my-channel", "my-event", {
 // Enviar mensaje de texto
 async function sendGroupMessage(req, res) {
     try {
-        const { groupId, message } = req.body;
-        const userId = req.user.user_id;
-
-        const newMessage = await GroupMessage.create({
-            group: groupId,
-            user: userId,
-            message,
-            type: "TEXT",
-        });
-
-        const data = await GroupMessage.findById(newMessage._id).populate("user");
-
-        console.log("📨 Mensaje enviado:", data);
-
-        // Emitir mensaje al grupo
-        pusher.trigger(`group-${groupId}`, "new-message", data);
-
-        // Emitir también como último mensaje del grupo (para lista de chats)
-        pusher.trigger("groups", "last-group-message", {
-            groupId,
-            message: data
-        });
-
-        res.status(201).send({ message: data });
+      const { groupId, message } = req.body;
+      const userId = req.user.user_id;
+  
+      if (!message || message.trim() === "") {
+        return res.status(400).send({ msg: "El mensaje no puede estar vacío" });
+      }
+  
+      // Guardar el mensaje en MongoDB
+      const newMessage = await GroupMessage.create({
+        group: groupId,
+        user: userId,
+        message,
+        type: "TEXT"
+      });
+  
+      // Obtener el mensaje completo con datos del usuario
+      const data = await GroupMessage.findById(newMessage._id).populate("user");
+  
+      // Emitir mensaje en tiempo real a los usuarios conectados
+      pusher.trigger(`group-${groupId}`, "new-message", data);
+  
+      // Preparar nombre del usuario para la notificación
+      const userName = data.user?.nombre || "Alguien";
+  
+      // Enviar notificación push a los dispositivos suscritos a este grupo
+      await beamsClient.publishToInterests([`group-${groupId}`], {
+        web: {
+          notification: {
+            title: "Nuevo mensaje en el grupo",
+            body: `${userName} dijo: ${message}`,
+            deep_link: `chatapp://group/${groupId}`
+          }
+        },
+        fcm: {
+          notification: {
+            title: "Nuevo mensaje en el grupo",
+            body: `${userName} dijo: ${message}`
+          }
+        }
+      });
+  
+      // Éxito
+      res.status(201).send({ message: data });
+  
     } catch (error) {
-        console.error("❌ Error al enviar mensaje:", error);
-        res.status(500).send({ msg: "Error al enviar mensaje", error });
+      console.error("❌ Error al enviar mensaje:", error);
+      res.status(500).send({ msg: "Error al enviar mensaje", error });
     }
-}
+  }
 
 
 
