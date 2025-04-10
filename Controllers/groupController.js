@@ -144,7 +144,7 @@ async function leaveGroup(req, res) {
 
         pusher.trigger(`group-${groupId}`, "participant-left", { userId });
         const user = await User.findById(userId);
-        await sendSystemMessage(groupId, `${user.nombre} salió del grupo`);
+        await sendSystemMessage(groupId, `${user.email} salió del grupo`);
 
         res.status(200).send({ group });
     } catch (error) {
@@ -166,7 +166,7 @@ async function addParticipants(req, res) {
         pusher.trigger(`group-${groupId}`, "participants-added", { participants });
         const users = await User.find({ _id: { $in: participants } }).select("nombre");
         const names = users.map(u => u.nombre).join(", ");
-        await sendSystemMessage(groupId, `${names} se unió al grupo`);
+        await sendSystemMessage(groupId, `${email} se unió al grupo`);
 
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
@@ -187,7 +187,7 @@ async function banParticipant(req, res) {
 
         pusher.trigger(`group-${groupId}`, "participant-banned", { userId });
         const user = await User.findById(userId);
-        await sendSystemMessage(groupId, `${user.nombre} fue expulsado del grupo`);
+        await sendSystemMessage(groupId, `${user.email} fue expulsado del grupo`);
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
         console.log(error);
