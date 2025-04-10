@@ -21,7 +21,7 @@ pusher.trigger("my-channel", "my-event", {
 async function sendGroupMessage(req, res) {
     try {
         const { groupId, message } = req.body;
-        const userId = req.user.user_id; // ← CORREGIDO ✅
+        const userId = req.user.user_id;
 
         const newMessage = await GroupMessage.create({
             group: groupId,
@@ -34,7 +34,14 @@ async function sendGroupMessage(req, res) {
 
         console.log("📨 Mensaje enviado:", data);
 
+        // Emitir mensaje al grupo
         pusher.trigger(`group-${groupId}`, "new-message", data);
+
+        // Emitir también como último mensaje del grupo (para lista de chats)
+        pusher.trigger("groups", "last-group-message", {
+            groupId,
+            message: data
+        });
 
         res.status(201).send({ message: data });
     } catch (error) {

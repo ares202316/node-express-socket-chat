@@ -67,7 +67,7 @@ async function createGroup(req, res) {
 
         const populatedGroup = await Group.findById(newGroup._id).populate("participants");
 
-        pusher.trigger(`group-${newGroup._id}`, "group-created", populatedGroup);
+        pusher.trigger("groups-channel", "group-created", populatedGroup);
 
         res.status(201).send({ group: populatedGroup });
     } catch (error) {
@@ -123,7 +123,7 @@ async function updateGroup(req, res) {
             updatedData[key] = updated[key];
         });
 
-        pusher.trigger(`group-${groupId}`, "group-updated", updated);
+        pusher.trigger("groups-channel", "group-updated", updated);
         console.log(updatedData);
         res.status(200).send(updatedData);
     } catch (error) {
