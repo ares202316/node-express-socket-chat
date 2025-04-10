@@ -164,10 +164,9 @@ async function addParticipants(req, res) {
         }, { new: true }).populate("creator participants");
 
         pusher.trigger(`group-${groupId}`, "participants-added", { participants });
-        const users = await User.find({ _id: { $in: participants } }).select("nombre");
         const users = await User.find({ _id: { $in: participants } }).select("email");
-const emails = users.map(u => u.email).join(", ");
-await sendSystemMessage(groupId, `${emails} se unió al grupo`);
+        const emails = users.map(u => u.email).join(", ");
+        await sendSystemMessage(groupId, `${emails} se unió al grupo`);
 
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
