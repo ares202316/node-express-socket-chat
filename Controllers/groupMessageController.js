@@ -117,56 +117,85 @@ async function countGroupMessages(req, res) {
 
 async function sendGroupFile(req, res) {
     try {
-        if (!req.files || !req.files.image) {
-            return res.status(400).send({ msg: "No se recibió ninguna imagen" });
+      if (!req.files || !req.files.image) {
+        return res.status(400).send({ msg: "No se recibió ninguna imagen" });
+      }
+  
+      const { group_id } = req.body;
+      const { user_id } = req.user;
+      const file = req.files.image;
+  
+      const mimetype = file.type || file.mimetype;
+  
+      if (!mimetype) {
+        return res.status(400).send({ msg: "Tipo de archivo no reconocido" });
+      }
+  
+      console.log("📄 Archivo recibido:", file);
+  
+      let type = "FILE";
+      if (mimetype.startsWith("image/")) {
+        type = "IMAGE";
+      } else if (mimetype.startsWith("video/")) {
+        type = "VIDEO";
+      } else if (mimetype.startsWith("audio/")) {
+        type = "AUDIO";
+      }
+  
+      const groupMessage = new GroupMessage({
+        group: group_id,
+        user: user_id,
+        message: getFilePath(file),
+        type
+      });
+  
+      await groupMessage.save();
+      const data = await groupMessage.populate("user");
+  
+      // Emitir mensaje al canal del grupo (chat abierto)
+      pusher.trigger(`group-${group_id}`, "new-group-message", data);
+  
+      // Emitir último mensaje para la lista de grupos
+      pusher.trigger("groups", "last-group-message", {
+        groupId: group_id,
+        message: data
+      });
+  
+      // Notificación push
+      const userName = data.user?.nombre || "Alguien";
+      let contenido = "envió un archivo";
+  
+      if (type === "IMAGE") contenido = "envió una imagen 📷";
+      if (type === "VIDEO") contenido = "envió un video 🎥";
+      if (type === "AUDIO") contenido = "envió un audio 🎧";
+  
+      await beamsClient.publishToInterests([`group-${group_id}`], {
+        web: {
+          notification: {
+            title: "Nuevo mensaje en el grupo",
+            body: `${userName} ${contenido}`,
+            deep_link: `chatapp://group/${group_id}`
+          }
+        },
+        fcm: {
+          notification: {
+            title: "Nuevo mensaje en el grupo",
+            body: `${userName} ${contenido}`
+          }
         }
-
-        const { group_id } = req.body;
-        const { user_id } = req.user;
-        const file = req.files.image;
-
-        const mimetype = file.type || file.mimetype;
-
-        if (!mimetype) {
-            return res.status(400).send({ msg: "Tipo de archivo no reconocido" });
-        }
-
-        console.log("📄 Archivo recibido:", file);
-
-        let type = "FILE";
-        if (mimetype.startsWith("image/")) {
-            type = "IMAGE";
-        } else if (mimetype.startsWith("video/")) {
-            type = "VIDEO";
-        } else if (mimetype.startsWith("audio/")) {
-            type = "AUDIO";
-        }
-
-        const groupMessage = new GroupMessage({
-            group: group_id,
-            user: user_id,
-            message: getFilePath(file),
-            type
-        });
-
-        await groupMessage.save();
-        const data = await groupMessage.populate("user");
-
-        pusher.trigger(`group-${group_id}`, "new-group-message", data);
-        console.log(data);
-
-        res.status(201).send({
-            msg: `${type} enviado correctamente`,
-            message_id: groupMessage._id,
-            message_path: groupMessage.message
-        });
-
+      });
+  
+      res.status(201).send({
+        msg: `${type} enviado correctamente`,
+        message_id: groupMessage._id,
+        message_path: groupMessage.message
+      });
+  
     } catch (error) {
-        console.error("❌ Error al enviar archivo al grupo:", error);
-        res.status(500).send({ msg: "Error interno al enviar el archivo" });
+      console.error("❌ Error al enviar archivo al grupo:", error);
+      res.status(500).send({ msg: "Error interno al enviar el archivo" });
     }
-}
-
+  }
 
 async function deleteGroupMessage(req, res) {
     try {
