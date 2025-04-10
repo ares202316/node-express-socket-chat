@@ -32,7 +32,7 @@ async function sendGroupMessage(req, res) {
         return res.status(400).send({ msg: "El mensaje no puede estar vacío" });
       }
   
-      // Guardar el mensaje en MongoDB
+      // Guardar mensaje
       const newMessage = await GroupMessage.create({
         group: groupId,
         user: userId,
@@ -40,16 +40,19 @@ async function sendGroupMessage(req, res) {
         type: "TEXT"
       });
   
-      // Obtener el mensaje completo con datos del usuario
       const data = await GroupMessage.findById(newMessage._id).populate("user");
   
-      // Emitir mensaje en tiempo real a los usuarios conectados
+      // 🔔 Emitir en tiempo real al grupo
       pusher.trigger(`group-${groupId}`, "new-message", data);
   
-      // Preparar nombre del usuario para la notificación
-      const userName = data.user?.nombre || "Alguien";
+      // ✅ Emitir último mensaje para la pantalla de grupos
+      pusher.trigger("groups", "last-group-message", {
+        groupId: groupId,
+        message: data
+      });
   
-      // Enviar notificación push a los dispositivos suscritos a este grupo
+      // 🔔 Notificación push
+      const userName = data.user?.nombre || "Alguien";
       await beamsClient.publishToInterests([`group-${groupId}`], {
         web: {
           notification: {
@@ -66,7 +69,6 @@ async function sendGroupMessage(req, res) {
         }
       });
   
-      // Éxito
       res.status(201).send({ message: data });
   
     } catch (error) {
