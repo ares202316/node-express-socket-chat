@@ -81,7 +81,7 @@ async function countGroupMessages(req, res) {
     }
 }
 
- async function sendGroupFile(req, res) {
+async function sendGroupFile(req, res) {
     try {
         if (!req.files || !req.files.image) {
             return res.status(400).send({ msg: "No se recibió ninguna imagen" });
@@ -90,7 +90,14 @@ async function countGroupMessages(req, res) {
         const { group_id } = req.body;
         const { user_id } = req.user;
         const file = req.files.image;
-        const mimetype = file.mimetype;
+
+        const mimetype = file.type || file.mimetype;
+
+        if (!mimetype) {
+            return res.status(400).send({ msg: "Tipo de archivo no reconocido" });
+        }
+
+        console.log("📄 Archivo recibido:", file);
 
         let type = "FILE";
         if (mimetype.startsWith("image/")) {
@@ -111,9 +118,9 @@ async function countGroupMessages(req, res) {
         await groupMessage.save();
         const data = await groupMessage.populate("user");
 
-        // 📡 Emitimos con Pusher
         pusher.trigger(`group-${group_id}`, "new-group-message", data);
-            console.log(data);
+        console.log(data);
+
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: groupMessage._id,
@@ -125,6 +132,7 @@ async function countGroupMessages(req, res) {
         res.status(500).send({ msg: "Error interno al enviar el archivo" });
     }
 }
+
 
 async function deleteGroupMessage(req, res) {
     try {
