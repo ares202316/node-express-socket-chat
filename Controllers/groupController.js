@@ -187,7 +187,7 @@ async function banParticipant(req, res) {
 
         pusher.trigger(`group-${groupId}`, "participant-banned", { userId });
         const user = await User.findById(userId);
-        await sendSystemMessage(groupId, `${user.nombre} fue expulsado del grupo`);
+        await sendSystemMessage(groupId, `${user.email} fue expulsado del grupo`);
         res.status(200).send({ group: updatedGroup });
     } catch (error) {
         console.log(error);
