@@ -18,6 +18,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/reset-password", (req, res) => {
+    const token = req.query.token;
+    res.redirect(`/reset-password.html?token=${token}`);
+  });
+  
+
 //Configuracion Body Parser
 
 app.use(bodyParser.urlencoded({extended: true}));
