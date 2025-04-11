@@ -5,6 +5,15 @@ import jsonwebtoken from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import crypto from 'crypto';
 import moment from 'moment';
+import Pusher from "pusher";
+
+const pusher = new Pusher({
+  appId: "1969942",
+  key: "5287c3152bf39d243e2e",
+  secret: "d52985181809e6a4b67c",
+  cluster: "us2",
+  useTLS: true
+});
 
 async function register(req, res) {
     try {
@@ -212,7 +221,11 @@ async function resetPassword(req, res) {
         await user.save();
 
         // Enviar una respuesta de éxito
+        await pusher.trigger(`recovery-${user._id}`, "password-reset-success", {
+            message: "Contraseña restablecida correctamente",
+          });
         res.status(200).send({ msg: "Contraseña restablecida exitosamente" });
+
 
     } catch (error) {
         res.status(500).send({ msg: "Error al restablecer la contraseña", error });
