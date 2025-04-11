@@ -16,7 +16,7 @@ initSocketServer(server);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-app.use(express.static(path.join(__dirname, "HTML")));
+app.use(express.static(path.join(__dirname, "public")));
 
 //Configuracion Body Parser
 
