@@ -112,40 +112,43 @@ async function sendRecoveryEmail(email, token) {
         });
 
         // 🔥 Corrección: Asegurar interpolación del token en el email
+
+        const link = `https://node-express-socket-chat-production.up.railway.app/reset-password?token=${token}`;
+
         const mailOptions = {
             from: `"Soporte ChatApp" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: "Recuperación de contraseña",
             html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-            <h2 style="color: #333; text-align: center;">🔐 Restablecimiento de contraseña</h2>
-            <p style="font-size: 16px; color: #555;">
-                Hola, hemos recibido una solicitud para restablecer tu contraseña en <strong>ChatApp</strong>.
-            </p>
-            <p style="font-size: 16px; color: #555;">
-                Para proceder, haz clic en el siguiente botón:
-            </p>
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="http://localhost:5000/reset-password?token=${token}" 
-                   style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">
-                    Restablecer contraseña
-                </a>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #333; text-align: center;">🔐 Restablecimiento de contraseña</h2>
+                <p style="font-size: 16px; color: #555;">
+                    Hola, hemos recibido una solicitud para restablecer tu contraseña en <strong>ChatApp</strong>.
+                </p>
+                <p style="font-size: 16px; color: #555;">
+                    Para proceder, haz clic en el siguiente botón:
+                </p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="${link}" 
+                    style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                        Restablecer contraseña
+                    </a>
+                </div>
+                <p style="font-size: 14px; color: #777;">
+                    Si el botón no funciona, también puedes copiar y pegar este enlace en tu navegador:
+                </p>
+                <p style="word-break: break-all; font-size: 14px; color: #007bff;">
+                    ${link}
+                </p>
+                <hr style="margin: 30px 0;">
+                <p style="font-size: 13px; color: #999;">
+                    Si no realizaste esta solicitud, puedes ignorar este mensaje. Este enlace expirará en <strong>15 minutos</strong> por motivos de seguridad.
+                </p>
+                <p style="font-size: 13px; color: #999; text-align: center;">
+                    © 2025 ChatApp. Todos los derechos reservados.
+                </p>
             </div>
-            <p style="font-size: 14px; color: #777;">
-                Si el botón no funciona, también puedes copiar y pegar este enlace en tu navegador:
-            </p>
-            <p style="word-break: break-all; font-size: 14px; color: #007bff;">
-                http://localhost:5000/reset-password?token=${token}
-            </p>
-            <hr style="margin: 30px 0;">
-            <p style="font-size: 13px; color: #999;">
-                Si no realizaste esta solicitud, puedes ignorar este mensaje. Este enlace expirará en <strong>15 minutos</strong> por motivos de seguridad.
-            </p>
-            <p style="font-size: 13px; color: #999; text-align: center;">
-                © 2025 ChatApp. Todos los derechos reservados.
-            </p>
-        </div>
-    `,
+            `,
         };
 
         await transporter.sendMail(mailOptions);
