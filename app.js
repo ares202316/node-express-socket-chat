@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import "dotenv/config";
 import cors from "cors";
+import { fileURLToPath } from "url"; 
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import { initSocketServer, io} from "./utils/index.js";
@@ -11,6 +12,11 @@ import path from "path";
 const app = express();
 const server = http.createServer(app);
 initSocketServer(server);
+
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+app.use(express.static(path.join(__dirname, "HTML")));
 
 //Configuracion Body Parser
 
