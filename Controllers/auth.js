@@ -108,7 +108,7 @@ async function refreshAccessToken(req, res) {
 }
 
 
-async function sendRecoveryEmail(email, token) {
+async function sendRecoveryEmail(email, token,res) {
     try {
         console.log("Enviando token:", token); // Verifica que el token tiene valor antes de enviarlo
 
