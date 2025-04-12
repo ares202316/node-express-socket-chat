@@ -162,6 +162,7 @@ async function sendRecoveryEmail(email, token) {
 
         await transporter.sendMail(mailOptions);
         console.log("Correo de recuperación enviado a", email);
+        res.status(200).json({ msg: "Correo enviado", userId: user._id });
     } catch (error) {
         console.error("Error enviando el correo:", error);
     }
