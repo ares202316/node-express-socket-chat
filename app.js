@@ -31,7 +31,9 @@ app.get("/reset-password", (req, res) => {
         verifyToken: token,
         verifyExpires: { $gt: new Date() },
       });
-  
+
+      console.log("🧪 Usuario encontrado para verificación:", user);
+      
       if (!user) {
         return res.status(400).send("Token inválido o expirado.");
       }
@@ -39,11 +41,12 @@ app.get("/reset-password", (req, res) => {
       user.verified = true;
       user.verifyToken = undefined;
       user.verifyExpires = undefined;
+  
       await user.save();
   
-      // Redirigir al HTML de éxito
-      res.redirect("/verify-success.html");
+      return res.redirect("/verify-success.html");
     } catch (err) {
+      console.error("❌ Error al verificar:", err);
       res.status(500).send("Error al verificar la cuenta.");
     }
   });
