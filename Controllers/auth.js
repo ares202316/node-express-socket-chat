@@ -77,7 +77,7 @@ async function register(req, res) {
     await transporter.sendMail(mailOptions);
   }
 
-function resendVerifyEmail(req, res) {
+  async function resendVerifyEmail(req, res) {
     try {
       const { email } = req.body;
       const emailLowerCase = email.toLowerCase();
