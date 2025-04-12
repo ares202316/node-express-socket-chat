@@ -77,7 +77,39 @@ async function register(req, res) {
     await transporter.sendMail(mailOptions);
   }
 
-  async function login(req, res) {
+function resendVerifyEmail(req, res) {
+    try {
+      const { email } = req.body;
+      const emailLowerCase = email.toLowerCase();
+  
+      const user = await User.findOne({ email: emailLowerCase });
+  
+      if (!user) {
+        return res.status(404).send({ msg: "Usuario no encontrado" });
+      }
+  
+      if (user.verified) {
+        return res.status(400).send({ msg: "La cuenta ya está verificada" });
+      }
+  
+      // Generar nuevo token
+      const verifyToken = crypto.randomBytes(32).toString("hex");
+      const verifyExpires = moment().add(1, "day").toDate();
+  
+      user.verifyToken = verifyToken;
+      user.verifyExpires = verifyExpires;
+      await user.save();
+  
+      await sendVerifyEmail(user.email, verifyToken);
+  
+      res.status(200).send({ msg: "Correo de verificación reenviado" });
+    } catch (error) {
+      console.error("❌ Error al reenviar verificación:", error);
+      res.status(500).send({ msg: "Error del servidor" });
+    }
+  }
+
+async function login(req, res) {
     try {
         const { email, password } = req.body;
         const emailLowerCase = email.toLowerCase();
@@ -290,4 +322,5 @@ export const AuthController = {
     refreshAccessToken,
     forgotPassword,
     resetPassword,
+    resendVerifyEmail,
 };

@@ -9,6 +9,15 @@ import bodyParser from "body-parser";
 import { initSocketServer, io} from "./utils/index.js";
 import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes,GroupRoutes,GroupMessageRoutes } from "./routes/index.js";
 import path from "path";
+import Pusher from "pusher";
+
+const pusher = new Pusher({
+  appId: "1969942",
+  key: "5287c3152bf39d243e2e",
+  secret: "d52985181809e6a4b67c",
+  cluster: "us2",
+  useTLS: true
+});
 
 
 const app = express();
@@ -33,9 +42,7 @@ app.get("/reset-password", (req, res) => {
         verifyToken: token,
         verifyExpires: { $gt: new Date() },
       });
-
-      console.log("🧪 Usuario encontrado para verificación:", user);
-
+  
       if (!user) {
         return res.status(400).send("Token inválido o expirado.");
       }
@@ -43,8 +50,12 @@ app.get("/reset-password", (req, res) => {
       user.verified = true;
       user.verifyToken = undefined;
       user.verifyExpires = undefined;
-  
       await user.save();
+  
+      // 🚀 Emitir evento a Pusher
+      await pusher.trigger("verify-channel", `verified-${user.email}`, {
+        message: "Cuenta verificada"
+      });
   
       return res.redirect("/verify-success.html");
     } catch (err) {
