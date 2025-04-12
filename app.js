@@ -22,7 +22,31 @@ app.get("/reset-password", (req, res) => {
     const token = req.query.token;
     res.redirect(`/reset-password.html?token=${token}`);
   });
+
+  app.get("/verify-account", async (req, res) => {
+    const { token } = req.query;
   
+    try {
+      const user = await User.findOne({
+        verifyToken: token,
+        verifyExpires: { $gt: new Date() },
+      });
+  
+      if (!user) {
+        return res.status(400).send("Token inválido o expirado.");
+      }
+  
+      user.verified = true;
+      user.verifyToken = undefined;
+      user.verifyExpires = undefined;
+      await user.save();
+  
+      // Redirigir al HTML de éxito
+      res.redirect("/verify-success.html");
+    } catch (err) {
+      res.status(500).send("Error al verificar la cuenta.");
+    }
+  });
 
 //Configuracion Body Parser
 

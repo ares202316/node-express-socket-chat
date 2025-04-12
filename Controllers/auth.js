@@ -17,22 +17,65 @@ const pusher = new Pusher({
 
 async function register(req, res) {
     try {
-        const { email, password } = req.body;
-
-        const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(password, salt);
-
-        const user = new User({
-            email: email.toLowerCase(),
-            password: hashPassword,
-        });
-
-        const userStorage = await user.save();
-        res.status(201).send({ user: userStorage });
+      const { email, password } = req.body;
+  
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(password, salt);
+  
+      const verifyToken = crypto.randomBytes(32).toString("hex");
+      const verifyExpires = moment().add(1, "day").toDate();
+  
+      const user = new User({
+        email: email.toLowerCase(),
+        password: hashPassword,
+        verified: false,
+        verifyToken,
+        verifyExpires,
+      });
+  
+      const userStorage = await user.save();
+  
+      // 🔥 Enviar correo de verificación
+      await sendVerifyEmail(user.email, verifyToken);
+  
+      res.status(201).send({ msg: "Usuario registrado. Verifica tu correo" });
     } catch (error) {
-        res.status(400).send({ msg: "Error al registrar el usuario", error });
+      res.status(400).send({ msg: "Error al registrar el usuario", error });
     }
-}
+  }
+
+  async function sendVerifyEmail(email, token) {
+    const verifyLink = `https://node-express-socket-chat-production.up.railway.app/verify-account?token=${token}`;
+  
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  
+    const mailOptions = {
+      from: `"Soporte ChatApp" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Verifica tu cuenta",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+          <h2 style="text-align: center;">🚀 Verificación de cuenta</h2>
+          <p>Gracias por registrarte en <strong>ChatApp</strong>.</p>
+          <p>Para activar tu cuenta, hacé clic en el siguiente botón:</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${verifyLink}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+              Verificar cuenta
+            </a>
+          </div>
+          <p>Este enlace expirará en 24 horas.</p>
+        </div>
+      `,
+    };
+  
+    await transporter.sendMail(mailOptions);
+  }
 
 async function login(req, res) {
     try {
