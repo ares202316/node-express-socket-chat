@@ -77,7 +77,7 @@ async function register(req, res) {
     await transporter.sendMail(mailOptions);
   }
 
-async function login(req, res) {
+  async function login(req, res) {
     try {
         const { email, password } = req.body;
         const emailLowerCase = email.toLowerCase();
@@ -89,6 +89,13 @@ async function login(req, res) {
             return res.status(400).send({ msg: "Usuario no encontrado" });
         }
 
+        // 💡 Verificar si está verificado
+        if (!userStorage.verified) {
+            return res.status(403).send({
+                msg: "Debes verificar tu cuenta antes de iniciar sesión. Revisa tu correo electrónico."
+            });
+        }
+
         // Comparar la contraseña
         const check = await bcrypt.compare(password, userStorage.password);
         if (!check) {
@@ -97,17 +104,18 @@ async function login(req, res) {
 
         // Generar el token de acceso
         const accessToken = await jwt.createAccessToken(userStorage);
-
         const resfreshToken = await jwt.createRefreshToken(userStorage);
 
         res.status(200).send({
             access: accessToken,
-            refresh: resfreshToken, 
+            refresh: resfreshToken,
         });
+
     } catch (error) {
         res.status(500).send({ msg: "Error del servidor", error });
     }
 }
+
 
 
 
