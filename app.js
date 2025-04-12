@@ -4,10 +4,12 @@ import "dotenv/config";
 import cors from "cors";
 import { fileURLToPath } from "url"; 
 import morgan from "morgan";
+import { User } from "../models/index.js";
 import bodyParser from "body-parser";
 import { initSocketServer, io} from "./utils/index.js";
 import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes,GroupRoutes,GroupMessageRoutes } from "./routes/index.js";
 import path from "path";
+
 
 const app = express();
 const server = http.createServer(app);
@@ -33,7 +35,7 @@ app.get("/reset-password", (req, res) => {
       });
 
       console.log("🧪 Usuario encontrado para verificación:", user);
-      
+
       if (!user) {
         return res.status(400).send("Token inválido o expirado.");
       }
