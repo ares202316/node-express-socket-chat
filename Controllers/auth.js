@@ -108,7 +108,7 @@ async function refreshAccessToken(req, res) {
 }
 
 
-async function sendRecoveryEmail(email, token,res) {
+async function sendRecoveryEmail(email, token) {
     try {
         console.log("Enviando token:", token); // Verifica que el token tiene valor antes de enviarlo
 
@@ -162,7 +162,7 @@ async function sendRecoveryEmail(email, token,res) {
 
         await transporter.sendMail(mailOptions);
         console.log("Correo de recuperación enviado a", email);
-        res.status(200).json({ msg: "Correo enviado", userId: user._id });
+       
     } catch (error) {
         console.error("Error enviando el correo:", error);
     }
@@ -190,7 +190,7 @@ async function forgotPassword(req, res) {
 
         await sendRecoveryEmail(emailLowerCase, resetToken);
 
-        res.status(200).send({ msg: "Correo de recuperación enviado" });
+        res.status(200).send({ msg: "Correo de recuperación enviado", userId: user._id  });
     } catch (error) {
         console.log(error);
         res.status(500).send({ msg: "Error del servidor", error });
