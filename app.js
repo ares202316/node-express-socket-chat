@@ -4,7 +4,7 @@ import "dotenv/config";
 import cors from "cors";
 import { fileURLToPath } from "url"; 
 import morgan from "morgan";
-import { User } from "../models/index.js";
+import { User } from "./models/index.js";
 import bodyParser from "body-parser";
 import { initSocketServer, io} from "./utils/index.js";
 import {authRoutes, userRoutes, ChaRoutes, chatMessageRoutes,authImagenes,GroupRoutes,GroupMessageRoutes } from "./routes/index.js";
