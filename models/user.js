@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
   apellido: { type: String },
   carrera: { type: String },
   cuenta: { type: String },
+  sede: { type: String },
   password: { type: String, required: true },
   avatar: { type: String },
 
