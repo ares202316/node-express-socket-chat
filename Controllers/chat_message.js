@@ -27,11 +27,9 @@ async function sendMessage(req, res) {
 
         await chat_message.save();
         const data = await chat_message.populate("user");
-
-        // Emitir con Pusher
+        // Emitir el evento de mensaje nuevo
         pusher.trigger(`chat-${chat_id}`, "new-message", data);
-
-        res.status(201).send({});
+        res.status(201).send({ chat_message });
     } catch (error) {
         console.error("Error al enviar mensaje:", error);
         res.status(400).send({ msg: "Error al enviar el mensaje", error });
@@ -40,9 +38,6 @@ async function sendMessage(req, res) {
 
 async function sendImage(req, res) {
     try {
-        console.log("Archivos recibidos:", req.files);
-        console.log("Body recibido:", req.body);
-
         if (!req.files || !req.files.image) {
             return res.status(400).send({ msg: "No se recibió ninguna imagen" });
         }
@@ -73,7 +68,6 @@ async function sendImage(req, res) {
         await chat_message.save();
         const data = await chat_message.populate("user");
 
-        // Emitir por Pusher
         console.log("📡 Emitiendo archivo por Pusher:", {
             chat_id,
             user_id,
@@ -82,13 +76,11 @@ async function sendImage(req, res) {
         });
 
         pusher.trigger(`chat-${chat_id}`, "new-message", data);
-
         res.status(201).send({
             msg: `${type} enviado correctamente`,
             message_id: chat_message._id,
             message_path: chat_message.message
         });
-
     } catch (error) {
         console.error("Error al enviar archivo:", error);
         res.status(500).send({ msg: "Error interno al enviar el archivo" });
@@ -143,8 +135,8 @@ async function deleteMessageSocket(req, res) {
         const messageId = req.params.id;
         console.log("🧾 ID del mensaje recibido para eliminar:", messageId);
 
-        // 1️⃣ Buscar el mensaje antes de eliminar
-        const message = await ChatMessage.findById(messageId);
+        // 1️⃣ Buscar el mensaje
+        const message = await ChatMessage.findById(messageId).populate("user");
         if (!message) {
             console.log("⚠️ No se encontró el mensaje con ID:", messageId);
             return res.status(404).send({ msg: "Mensaje no encontrado" });
@@ -152,7 +144,6 @@ async function deleteMessageSocket(req, res) {
 
         const chatId = message.chat?.toString();
         console.log("💬 Chat ID asociado al mensaje:", chatId);
-
         if (!chatId) {
             console.log("❌ El mensaje no tiene campo 'chat'");
             return res.status(500).send({ msg: "El mensaje no tiene chat asociado" });
@@ -162,21 +153,19 @@ async function deleteMessageSocket(req, res) {
         await ChatMessage.findByIdAndDelete(messageId);
         console.log("🗑️ Mensaje eliminado con ID:", message._id);
 
-        // 3️⃣ Emitir a la sala correspondiente
-        req.io.to(chatId).emit("message_deleted", {
+        // 3️⃣ Emitir el evento usando Pusher
+        pusher.trigger(`chat-${chatId}`, "message_deleted", {
             _id: message._id,
             chat: chatId
         });
         console.log("📢 Emitido message_deleted al chat:", chatId);
 
         res.status(200).send({ msg: "Mensaje eliminado", messageId: message._id });
-
     } catch (error) {
         console.error("❌ Error en deleteMessageSocket:", error);
         res.status(500).send({ msg: "Error del servidor", error });
     }
 }
-
 
 export const ChatMessageController = {
     sendMessage,
