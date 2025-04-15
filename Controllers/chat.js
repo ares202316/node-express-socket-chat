@@ -99,8 +99,9 @@ async function getChat(req, res) {
 
 async function getChatsFiltered(req, res) {
     try {
-        const user_id  = req.params.id; // Obtenemos el ID del usuario desde los parámetros
-        console.log(user_id);
+        const user_id = req.params.id; // Obtenemos el ID del usuario desde los parámetros
+        console.log("User ID recibido:", user_id);
+
         const chats = await Chat.find({
             $or: [{ participant_one: user_id }, { participant_two: user_id }]
         })
@@ -122,21 +123,23 @@ async function getChatsFiltered(req, res) {
                 participant: {
                     _id: otherParticipant._id,
                     email: otherParticipant.email,
-                    nombre: otherParticipant.nombre || null,
-                    apellido: otherParticipant.apellido || null,
-                    avatar: otherParticipant.avatar || null
+                    nombre: otherParticipant.nombre || "",
+                    apellido: otherParticipant.apellido || "",
+                    avatar: otherParticipant.avatar || ""
                 },
-                last_message_date: lastMessage?.createdAt || null,
+                last_message_date: lastMessage ? lastMessage.createdAt : null,
                 last_message: lastMessage || null
             });
         }
 
+        console.log("Chats filtrados:", filteredChats);
         res.status(200).send(filteredChats);
     } catch (error) {
         console.error("Error en getChatsFiltered:", error);
         res.status(400).send({ msg: "Error al obtener los chats", error });
     }
 }
+
 
 async function getLastMessage(chat_id) {
     try {
