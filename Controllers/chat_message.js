@@ -16,6 +16,7 @@ async function sendMessage(req, res) {
         const { chat_id, message, type = "TEXT" } = req.body;
         const { user_id } = req.user;
 
+        // Crear el mensaje
         const chat_message = new ChatMessage({
             chat: chat_id,
             user: user_id,
@@ -25,6 +26,7 @@ async function sendMessage(req, res) {
             updatedAt: moment().tz("America/Mexico_City").toDate(),
         });
 
+        // Guardar el mensaje
         await chat_message.save();
         const data = await chat_message.populate("user");
 
@@ -40,11 +42,13 @@ async function sendMessage(req, res) {
             createdAt: chat_message.createdAt
         };
 
+        // Emitir el evento "message_notify" con el último mensaje
         pusher.trigger(`chat-${chat_id}`, "message_notify", {
             _id: chat_id,
             last_message: lastMessage
         });
 
+        // Responder al cliente con el mensaje enviado
         res.status(201).send({ chat_message });
     } catch (error) {
         console.error("Error al enviar mensaje:", error);

@@ -99,9 +99,10 @@ async function getChat(req, res) {
 
 async function getChatsFiltered(req, res) {
     try {
-        const user_id = req.params.id; // Obtenemos el ID del usuario desde los parámetros
+        const user_id = req.params.id;
         console.log("User ID recibido:", user_id);
 
+        // Obtener los chats del usuario
         const chats = await Chat.find({
             $or: [{ participant_one: user_id }, { participant_two: user_id }]
         })
@@ -110,8 +111,6 @@ async function getChatsFiltered(req, res) {
         .exec();
 
         const filteredChats = [];
-
-        // Iteramos sobre cada chat
         for (let chat of chats) {
             const lastMessage = await getLastMessage(chat._id);
 
@@ -135,21 +134,20 @@ async function getChatsFiltered(req, res) {
             });
         }
 
-        // Ordenar los chats por el último mensaje
+        // Ordenar los chats por el último mensaje (de más reciente a más antiguo)
         filteredChats.sort((a, b) => {
             const dateA = new Date(a.last_message_date);
             const dateB = new Date(b.last_message_date);
             return dateB - dateA; // Orden descendente por fecha
         });
 
-        console.log("Chats filtrados:", filteredChats);
+        // Enviar los chats filtrados al frontend
         res.status(200).send(filteredChats);
     } catch (error) {
         console.error("Error en getChatsFiltered:", error);
         res.status(400).send({ msg: "Error al obtener los chats", error });
     }
 }
-
 
 async function getLastMessage(chat_id) {
     try {
