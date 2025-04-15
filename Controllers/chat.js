@@ -1,4 +1,4 @@
-import { Chat, ChatMessage} from "../models/index.js";
+import { Chat, ChatMessage, User} from "../models/index.js";
 
 async function create(req, res) {
     try {
@@ -32,6 +32,34 @@ async function create(req, res) {
         res.status(400).send({ msg: "Error al crear el chat", error });
     }
 }
+
+async function getUsersWithoutChat(req, res) {
+    try {
+      const { user_id } = req.user;
+  
+      // Paso 1: Encontrar los chats donde el usuario actual es un participante
+      const chats = await Chat.find({
+        $or: [{ participant_one: user_id }, { participant_two: user_id }]
+      }).select('participant_one participant_two');
+  
+      // Extraer los IDs de los participantes de esos chats
+      const chatParticipantIds = chats.reduce((acc, chat) => {
+        acc.add(chat.participant_one.toString());
+        acc.add(chat.participant_two.toString());
+        return acc;
+      }, new Set());
+  
+      // Paso 2: Encontrar usuarios que no están en la lista de participantes de chats
+      const usersWithoutChat = await User.find({
+        _id: { $nin: [...chatParticipantIds, user_id] } // Excluir también al usuario actual
+      }).select('-password'); // Excluir el campo de contraseña
+  
+      res.status(200).send(usersWithoutChat);
+    } catch (error) {
+      console.error("Error en getUsersWithoutChat:", error);
+      res.status(500).send({ msg: "Error del servidor" });
+    }
+  }
 
 async function getAll(req, res) {
     try {
@@ -168,4 +196,5 @@ export const ChatController = {
     getChat,
     getChatsFiltered,
     getLastMessage,
+    getUsersWithoutChat,
 };
