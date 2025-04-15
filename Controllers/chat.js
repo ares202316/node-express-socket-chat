@@ -110,7 +110,9 @@ async function getChatsFiltered(req, res) {
         .exec();
 
         const filteredChats = [];
-        for await (const chat of chats) {
+
+        // Iteramos sobre cada chat
+        for (let chat of chats) {
             const lastMessage = await getLastMessage(chat._id);
 
             // Determinamos quién es el otro participante
@@ -118,6 +120,7 @@ async function getChatsFiltered(req, res) {
                 ? chat.participant_two
                 : chat.participant_one;
 
+            // Añadimos el chat con el último mensaje
             filteredChats.push({
                 _id: chat._id,
                 participant: {
@@ -131,6 +134,13 @@ async function getChatsFiltered(req, res) {
                 last_message: lastMessage || null
             });
         }
+
+        // Ordenar los chats por el último mensaje
+        filteredChats.sort((a, b) => {
+            const dateA = new Date(a.last_message_date);
+            const dateB = new Date(b.last_message_date);
+            return dateB - dateA; // Orden descendente por fecha
+        });
 
         console.log("Chats filtrados:", filteredChats);
         res.status(200).send(filteredChats);
