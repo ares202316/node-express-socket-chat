@@ -1,6 +1,6 @@
-export const DB_USER = "addysespinoza80";
-export const DB_PASSWORD = "y6hbQ95kr0Vtsh98";
-export const DB_HOST = "chataapp.lycq23a.mongodb.net";
+export const DB_USER = "addysespinoza620";
+export const DB_PASSWORD = "GTk41pOOB6ut151F";
+export const DB_HOST = "cluster0.fb6tzci.mongodb.net";
 
 export const IP_SERVER = "localhost";
 
