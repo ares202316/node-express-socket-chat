@@ -2,36 +2,52 @@ import { Chat, ChatMessage, User} from "../models/index.js";
 
 async function create(req, res) {
     try {
-        const { participant_id_one, participant_id_two } = req.body;
-
-       
-        const foundOne = await Chat.findOne({
-            participant_one: participant_id_one,
-            participant_two: participant_id_two
-        });
-
-        const foundTwo = await Chat.findOne({
-            participant_one: participant_id_two,
-            participant_two: participant_id_one
-        });
-
-        if (foundOne || foundTwo) {
-            return res.status(200).send({ msg: "Ya tiene un chat con este usuario" });
-        }
-
-      
-        const chat = new Chat({
-            participant_one: participant_id_one,
-            participant_two: participant_id_two,
-        });
-
-        const chatStorage = await chat.save(); 
-
-        res.status(201).send(chatStorage);
+      const { participant_id_one, participant_id_two } = req.body;
+  
+      // 1) Revisar si ya existe
+      const exists = await Chat.findOne({
+        $or: [
+          { participant_one: participant_id_one, participant_two: participant_id_two },
+          { participant_one: participant_id_two, participant_two: participant_id_one }
+        ]
+      });
+      if (exists) return res.status(200).send({ msg: "Ya tienes un chat con este usuario" });
+  
+      // 2) Crear y guardar chat
+      let chat = new Chat({ participant_one: participant_id_one, participant_two: participant_id_two });
+      chat = await chat.save();
+  
+      // 3) Cargar datos del otro participante
+      const otherId =
+        chat.participant_one.toString() === participant_id_one
+          ? chat.participant_two
+          : chat.participant_one;
+      const other = await User.findById(otherId).select("-password");
+  
+      // 4) Construir objeto completo que espera el cliente
+      const payload = {
+        _id: chat._id,
+        participant: {
+          _id: other._id,
+          nombre: other.nombre,
+          apellido: other.apellido,
+          email: other.email,
+          avatar: other.avatar
+        },
+        last_message: null,
+        last_message_date: null
+      };
+  
+      // 5) Emitir a ambos participantes
+      pusher.trigger(`${participant_id_one}_notify`, "new-chat", payload);
+      pusher.trigger(`${participant_id_two}_notify`, "new-chat", payload);
+  
+      return res.status(201).send(payload);
     } catch (error) {
-        res.status(400).send({ msg: "Error al crear el chat", error });
+      console.error("Error al crear chat:", error);
+      return res.status(500).send({ msg: "Error al crear el chat", error });
     }
-}
+  }
 
 async function getUsersWithoutChat(req, res) {
     try {
