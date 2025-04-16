@@ -39,6 +39,27 @@ async function getUsers(req, res){
     
 }
 
+async function getUserByEmail(req, res) {
+    try {
+      const { email } = req.query;
+  
+      if (!email) {
+        return res.status(400).send({ msg: "El parámetro 'email' es requerido." });
+      }
+  
+      const userInfo = await User.findOne({ email }).select("-password");
+  
+      if (!userInfo) {
+        return res.status(404).send({ msg: "Usuario no encontrado." });
+      }
+  
+      res.status(200).send(userInfo);
+    } catch (error) {
+      console.error("Error al obtener el usuario por email:", error);
+      res.status(500).send({ msg: "Error del servidor." });
+    }
+  }
+
 async function getUser(req, res){
   
     const {id} = req.params;
@@ -97,5 +118,6 @@ export const UserController = {
     getUsers,
     getUser,
     updateUser,
+    getUserByEmail,
 
 };

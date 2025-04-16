@@ -7,6 +7,7 @@ const mdUpload = multiparty({uploadDir: "./uploads/avatar"});
 
 const api = express.Router();
 
+api.get("/user/by-email", [mdAuth.asureAuth], UserController.getUserByEmail);
 api.get("/user/me", [mdAuth.asureAuth], UserController.getMe);
 api.get("/user",[mdAuth.asureAuth], UserController.getUsers);
 api.get("/user/:id",[mdAuth.asureAuth], UserController.getUser);
