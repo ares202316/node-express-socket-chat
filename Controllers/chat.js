@@ -1,5 +1,15 @@
 import { Chat, ChatMessage, User} from "../models/index.js";
 
+import Pusher from "pusher";
+
+const pusher = new Pusher({
+  appId: "1969942",
+  key: "5287c3152bf39d243e2e",
+  secret: "d52985181809e6a4b67c",
+  cluster: "us2",
+  useTLS: true
+});
+
 async function create(req, res) {
     try {
       const { participant_id_one, participant_id_two } = req.body;
