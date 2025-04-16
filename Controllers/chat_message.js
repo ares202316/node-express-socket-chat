@@ -45,14 +45,28 @@ async function sendMessage(req, res) {
         // Emitir el evento "message_notify" con el último mensaje
         pusher.trigger(`chat-${chat_id}`, "message_notify", {
             _id: chat_id,
-            last_message: lastMessage
-        });
+            last_message: {
+              _id: chat_message._id,
+              chat: chat_message.chat,
+              message: chat_message.message,
+              type: chat_message.type,
+              createdAt: chat_message.createdAt
+            }
+          });
 
         pusher.trigger(`${user_id}_notify`, "message_notify", {
             _id: chat_id,
-            last_message: lastMessage
+            last_message: {
+              _id: chat_message._id,
+              chat: chat_message.chat,
+              message: chat_message.message,
+              type: chat_message.type,
+              createdAt: chat_message.createdAt
+            }
           });
+      
 
+        
         // Responder al cliente con el mensaje enviado
         res.status(201).send({ chat_message });
     } catch (error) {
