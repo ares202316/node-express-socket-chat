@@ -48,6 +48,11 @@ async function sendMessage(req, res) {
             last_message: lastMessage
         });
 
+        pusher.trigger(`${user_id}_notify`, "message_notify", {
+            _id: chat_id,
+            last_message: lastMessage
+          });
+
         // Responder al cliente con el mensaje enviado
         res.status(201).send({ chat_message });
     } catch (error) {
