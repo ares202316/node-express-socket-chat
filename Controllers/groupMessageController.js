@@ -13,6 +13,9 @@ const pusher = new Pusher({
   useTLS: true
 });
 
+
+
+
 const beamsClient = new PushNotifications({
     instanceId: '596e0803-3ebd-41f5-8521-868757c854c8',
     secretKey: 'D72BC9C989CD6D36280CFB83EAF480C675AA99FF403BE7DE16156691381ED056',

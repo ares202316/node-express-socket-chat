@@ -3,6 +3,8 @@ import { ChatMessage} from "../models/index.js";
 import moment from 'moment-timezone';
 import {io, getFilePath} from "../utils/index.js";
 import Pusher from "pusher";
+import PushNotifications from '@pusher/push-notifications-server'
+
 const pusher = new Pusher({
   appId: "1969942",
   key: "5287c3152bf39d243e2e",
@@ -11,69 +13,89 @@ const pusher = new Pusher({
   useTLS: true
 });
 
-async function sendMessage(req, res) {
+const beamsClient = new PushNotifications({
+    instanceId: '596e0803-3ebd-41f5-8521-868757c854c8',
+    secretKey:  'D72BC9C989CD6D36280CFB83EAF480C675AA99FF403BE7DE16156691381ED056',
+  })
+
+  async function sendMessage(req, res) {
     try {
-        const { chat_id, message, type = "TEXT" } = req.body;
-        const { user_id } = req.user;
-
-        // Crear el mensaje
-        const chat_message = new ChatMessage({
-            chat: chat_id,
-            user: user_id,
-            message,
-            type,
-            createdAt: moment().tz("America/Mexico_City").toDate(),
-            updatedAt: moment().tz("America/Mexico_City").toDate(),
-        });
-
-        // Guardar el mensaje
-        await chat_message.save();
-        const data = await chat_message.populate("user");
-
-        // Emitir el mensaje por Pusher
-        pusher.trigger(`chat-${chat_id}`, "new-message", data);
-
-        // Emitir el último mensaje para actualizar los chats
-        const lastMessage = {
-            _id: chat_message._id,
-            chat: chat_message.chat,
-            message: chat_message.message,
-            type: chat_message.type,
-            createdAt: chat_message.createdAt
-        };
-
-        // Emitir el evento "message_notify" con el último mensaje
-        pusher.trigger(`chat-${chat_id}`, "message_notify", {
-            _id: chat_id,
-            last_message: {
-              _id: chat_message._id,
-              chat: chat_message.chat,
-              message: chat_message.message,
-              type: chat_message.type,
-              createdAt: chat_message.createdAt
+      const { chat_id, message, type = "TEXT" } = req.body
+      const { user_id } = req.user
+  
+      // 1️⃣ Guardar el mensaje
+      const chat_message = new ChatMessage({
+        chat: chat_id,
+        user: user_id,
+        message,
+        type,
+        createdAt: moment().tz("America/Mexico_City").toDate(),
+        updatedAt: moment().tz("America/Mexico_City").toDate(),
+      })
+      await chat_message.save()
+      const data = await chat_message.populate("user")
+  
+      // 2️⃣ Emitir en Pusher al canal del chat
+      pusher.trigger(`chat-${chat_id}`, "new-message", data)
+  
+      // 3️⃣ Preparar objeto de último mensaje
+      const lastMessage = {
+        _id:        chat_message._id,
+        chat:       chat_message.chat,
+        message:    chat_message.message,
+        type:       chat_message.type,
+        createdAt:  chat_message.createdAt
+      }
+  
+      // 4️⃣ Emitir evento para actualizar pantalla de Chats
+      pusher.trigger(`chat-${chat_id}`, "message_notify", {
+        _id:          chat_id,
+        last_message: lastMessage
+      })
+      // y también al canal personal del destinatario:
+      // primero averigua quién es el otro participante:
+      const chatDoc = await Chat.findById(chat_id)
+      const otherUserId = chatDoc.participant_one.toString() === user_id
+        ? chatDoc.participant_two.toString()
+        : chatDoc.participant_one.toString()
+  
+      pusher.trigger(`${otherUserId}_notify`, "message_notify", {
+        _id:          chat_id,
+        last_message: lastMessage
+      })
+  
+      // 5️⃣ ENVIAR PUSH POR BEAMS al interés del otro usuario
+      //    (nota: el interés 'user-<id>' debe estar suscrito en cliente)
+      await beamsClient.publishToInterests(
+        [`user-${otherUserId}`],
+        {
+          web: {
+            notification: {
+              title: "Nuevo mensaje",
+              body: `${data.user.nombre}: ${message}`,
+              deep_link: `chatapp://chat/${chat_id}`
             }
-          });
-
-        pusher.trigger(`${user_id}_notify`, "message_notify", {
-            _id: chat_id,
-            last_message: {
-              _id: chat_message._id,
-              chat: chat_message.chat,
-              message: chat_message.message,
-              type: chat_message.type,
-              createdAt: chat_message.createdAt
+          },
+          fcm: {
+            notification: {
+              title: "Nuevo mensaje",
+              body: `${data.user.nombre}: ${message}`
+            },
+            data: {
+              chat_id,
+              message_id: chat_message._id.toString()
             }
-          });
-      
-
-        
-        // Responder al cliente con el mensaje enviado
-        res.status(201).send({ chat_message });
+          }
+        }
+      )
+  
+      // 6️⃣ Responder al cliente
+      res.status(201).send({ chat_message })
     } catch (error) {
-        console.error("Error al enviar mensaje:", error);
-        res.status(400).send({ msg: "Error al enviar el mensaje", error });
+      console.error("Error al enviar mensaje:", error)
+      res.status(500).send({ msg: "Error al enviar el mensaje", error })
     }
-}
+  }
 
 async function sendImage(req, res) {
     try {
